@@ -1,12 +1,30 @@
 # pi-pulse
 
-Numerical optimizer for pi (mirror) pulses in large-momentum-transfer (LMT) atom interferometry, based on [Saywell et al., *Nature Communications* (2023)](https://www.nature.com/articles/s41467-023-43374-0).
+Demonstration of constrained numerical optimization using PyTorch to design laser control sequences for light-pulse atom interferometry that are more robust against experimental error compared to traditional pulses.
 
-Given a Bragg diffraction order *n*, the optimizer finds piecewise-constant laser control sequences (Rabi drive + detuning) that maximize the mirror fidelity of a 2*n*&#8463;*k* momentum transfer, averaged over realistic distributions of atomic momentum spread and laser intensity noise.
+Given a Bragg diffraction order *n*, the optimizer finds piecewise-constant laser controls (Rabi drive + detuning) that maximize mirror fidelity for 2*n*ℏ*k* momentum transfer, averaged over realistic distributions of atomic momentum spread and laser intensity noise.
+
+Based on [Saywell et al., *Nature Communications* (2023)](https://www.nature.com/articles/s41467-023-43374-0).
 
 <p align="center">
   <img src="imgs/mirror_pulse_fidelity_contour.png" alt="Optimized Mirror Pulse Fidelity" width="600">
 </p>
+
+## How it works
+
+1. Initialize random for the in-phase, quadrature, and detuning components of the control sequence (&Omega;<sub>I</sub>, &Omega;<sub>Q</sub>, and &delta;)
+2. Each iteration, draw a batch of noise samples from distributions representing common sources of experimental error:
+   - Momentum spread &delta;*p* ~ N(0, &sigma;<sub>p</sub>)
+   - Intensity error &beta; ~ U(&beta;<sub>min</sub>, &beta;<sub>max</sub>)
+3. Build the full time-dependent Hamiltonian matrix for all samples (vectorized over the batch)
+4. Chain-multiply matrix exponentials over all control sequence time steps to get the total propagator *U*
+5. Compute the batch-averaged mirror infidelity (loss) and backpropagate through PyTorch autograd
+6. Adam optimizer step to update &Omega;<sub>I</sub>, &Omega;<sub>Q</sub>, and &delta;
+7. Apply constraints to &Omega;<sub>I</sub>, &Omega;<sub>Q</sub>, and &delta;:
+   - Sinc low-pass filter (bandwidth limit)
+   - Amplitude clamp (&Omega;<sub>R</sub> &le; &Omega;<sub>max</sub>)
+   - Zero boundary conditions
+8. Save the best pulse and generate evaluation plots
 
 ## Example Output (500 Iterations)
 
@@ -28,21 +46,6 @@ Script parameter settings
 <p align="center">
   <img src="imgs/mirror_pulse_parameters.png" alt="Optimized Mirror Pulse Parameters" width="400">
 </p>
-
-## How it works
-
-1. Initialize random control sequences for &Omega;<sub>I</sub>, &Omega;<sub>Q</sub>, and &delta;
-2. Each iteration, draw a batch of noise samples:
-   - Momentum spread &delta;*p* ~ N(0, &sigma;<sub>p</sub>)
-   - Intensity error &beta; ~ U(&beta;<sub>min</sub>, &beta;<sub>max</sub>)
-3. Build the full time-dependent Hamiltonian for all samples (vectorized over the batch)
-4. Chain-multiply matrix exponentials to get the total propagator *U*
-5. Compute the batch-averaged mirror infidelity and backpropagate through PyTorch autograd
-6. Adam optimizer step, followed by projection onto constraints:
-   - Sinc low-pass filter (bandwidth limit)
-   - Amplitude clamp (&Omega;<sub>R</sub> &le; &Omega;<sub>max</sub>)
-   - Zero boundary conditions
-7. Save the best pulse and generate evaluation plots
 
 ## Project structure
 
