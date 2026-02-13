@@ -58,19 +58,39 @@ const.py        - Physical constants (87Rb mass, recoil frequency, laser wavenum
 
 ## Setup
 
-Requires Python 3.13+ and [Poetry](https://python-poetry.org/).
+Requires Python 3.13.
+
+A `pyproject.toml` (Poetry configuration file) is included for dependency management. 
+
+Install [Poetry](https://python-poetry.org/)
+```bash
+pipx install poetry
+```
+
+To create a virtual environment in the project directory run:
+```bash
+cd /path/to/project/folder
+python3.13 -m venv .venv
+```
+
+Activate the virtual environment:
+```bash
+source .venv/bin/activate
+```
+
+install dependencies
 
 ```bash
+poetry lock
 poetry install
 ```
 
-A CUDA GPU is strongly recommended. The optimizer uses float64 throughout, so MPS (Apple Silicon) is not supported.
+A CUDA-capable NVIDIA GPU is strongly recommended for good performance.
+
+The optimizer uses 64-bit floating point precision (`float64`). Because of this, Apple Silicon GPUs (MPS backend) are not supported.
 
 ## Usage
-
-```bash
-poetry run python main.py
-```
+`main.py` script runs optimizer to find pulse parameters.
 
 ## Reference
 
