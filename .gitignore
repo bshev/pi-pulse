@@ -35,3 +35,4 @@ Thumbs.db
 outputs/
 notebooks/
 *.npz
+*.pdf
